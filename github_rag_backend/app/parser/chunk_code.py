@@ -1,88 +1,159 @@
 import tiktoken
 
-encoding = tiktoken.get_encoding("cl100k_base")
-MAX_TOKENS = 300
+encoding = (
+    tiktoken.get_encoding(
+        "cl100k_base"
+    )
+)
+
+MAX_TOKENS = 500
 
 
 def token_count(text):
-    return len(encoding.encode(text))
+
+    return len(
+        encoding.encode(
+            text
+        )
+    )
 
 
-def chunk_text(content):
-    if not content:
-        return []
+def split_tokens(
+    text,
+    overlap=50,
+):
 
-    words = content.split()
+    tokens = (
+        encoding.encode(
+            text
+        )
+    )
 
     chunks = []
-    current_chunk = []
-    current_tokens = 0
 
-    for word in words:
-        word_tokens = token_count(word)
+    start = 0
 
-        if current_tokens + word_tokens > MAX_TOKENS:
-            chunks.append(" ".join(current_chunk))
-            current_chunk = [word]
-            current_tokens = word_tokens
-        else:
-            current_chunk.append(word)
-            current_tokens += word_tokens
+    while (
+        start
+        < len(tokens)
+    ):
 
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
+        end = (
+            start
+            + MAX_TOKENS
+        )
+
+        piece = (
+            encoding.decode(
+                tokens[
+                    start:end
+                ]
+            )
+        )
+
+        chunks.append(
+            piece
+        )
+
+        start += (
+            MAX_TOKENS
+            - overlap
+        )
 
     return chunks
 
 
-def build_semantic_chunks(parsed_files):
+def build_semantic_chunks(
+    parsed_files,
+):
+
     semantic_chunks = []
 
     for file in parsed_files:
 
-        # safer lookup
-        file_type = file.get("type")
+        if (
+            file["type"]
+            == "code"
+        ):
 
-        # if missing, skip
-        if not file_type:
-            print("Skipping file missing type:", file)
-            continue
+            for node in file[
+                "nodes"
+            ]:
 
-        if file_type == "code":
-
-            nodes = file.get("nodes", [])
-
-            for node in nodes:
-
-                pieces = chunk_text(
-                    node.get("content", "")
+                pieces = (
+                    split_tokens(
+                        node[
+                            "content"
+                        ]
+                    )
                 )
 
                 for piece in pieces:
+
                     semantic_chunks.append(
                         {
-                            "file_name": file["file_name"],
-                            "path": file["path"],
-                            "node_type": node.get("type"),
-                            "name": node.get("name"),
-                            "content": piece,
+                            "file_name":
+                            file[
+                                "file_name"
+                            ],
+
+                            "path":
+                            file[
+                                "path"
+                            ],
+
+                            "node_type":
+                            node[
+                                "type"
+                            ],
+
+                            "name":
+                            node[
+                                "name"
+                            ],
+
+                            "content":
+                            piece,
                         }
                     )
 
-        elif file_type == "text":
+        elif (
+            file["type"]
+            == "text"
+        ):
 
-            pieces = chunk_text(
-                file.get("content", "")
+            pieces = (
+                split_tokens(
+                    file[
+                        "content"
+                    ]
+                )
             )
 
             for piece in pieces:
+
                 semantic_chunks.append(
                     {
-                        "file_name": file["file_name"],
-                        "path": file["path"],
-                        "node_type": "text",
-                        "name": file["file_name"],
-                        "content": piece,
+                        "file_name":
+                        file[
+                            "file_name"
+                        ],
+
+                        "path":
+                        file[
+                            "path"
+                        ],
+
+                        "node_type":
+                        "text",
+
+                        "name":
+                        file[
+                            "file_name"
+                        ],
+
+                        "content":
+                        piece,
                     }
                 )
 

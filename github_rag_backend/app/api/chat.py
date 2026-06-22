@@ -1,10 +1,5 @@
-from fastapi import (
-    APIRouter
-)
-
-from pydantic import (
-    BaseModel
-)
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.rag.retriever import (
     retrieve_chunks
@@ -13,6 +8,7 @@ from app.rag.retriever import (
 from app.rag.generate_answer import (
     generate_answer
 )
+
 
 router = APIRouter()
 
@@ -31,21 +27,22 @@ async def chat(
     request: ChatRequest
 ):
 
-    chunks = (
-        retrieve_chunks(
-            repo_name=
-            request.repo_name,
+    chunks = retrieve_chunks(
 
-            question=
-            request.question,
-        )
+        repo_name=
+        request.repo_name,
+
+        question=
+        request.question,
     )
 
-    answer = (
-        generate_answer(
-            request.question,
-            chunks,
-        )
+    answer = generate_answer(
+
+        question=
+        request.question,
+
+        chunks=
+        chunks,
     )
 
     return {
@@ -56,7 +53,7 @@ async def chat(
         "question":
         request.question,
 
-        "matches":
+        "retrieved_chunks":
         chunks,
 
         "answer":

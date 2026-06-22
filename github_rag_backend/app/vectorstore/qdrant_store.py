@@ -140,18 +140,25 @@ def store_chunks(
         )
 
 
+from qdrant_client.models import (
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
+
+
 def search_chunks(
     repo_name: str,
     vector,
-    limit=5
+    limit=5,
 ):
 
-    results = client.search(
+    results = client.query_points(
 
         collection_name=
         COLLECTION_NAME,
 
-        query_vector=
+        query=
         vector,
 
         limit=
@@ -161,18 +168,14 @@ def search_chunks(
         Filter(
             must=[
                 FieldCondition(
+                    key="repo_name",
 
-                    key=
-                    "repo_name",
-
-                    match=
-                    MatchValue(
-                        value=
-                        repo_name
+                    match=MatchValue(
+                        value=repo_name
                     ),
                 )
             ]
         ),
     )
 
-    return results
+    return results.points
